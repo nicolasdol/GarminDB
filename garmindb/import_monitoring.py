@@ -13,6 +13,8 @@ import enum
 import fitfile
 from idbutils import JsonFileProcessor, Conversions
 
+from garmindb.garmindb.garmin_db import BodyBattery
+
 from .garmindb import GarminDb, Attributes, Weight, Sleep, SleepEvents, RestingHeartRate, DailySummary
 from .fit_data import FitData
 
@@ -261,6 +263,45 @@ class GarminRhrData(JsonFileProcessor):
                 return 1
         return 0
 
+class GarminBodyBatteryData(JsonFileProcessor):
+    """Class for importing JSON formatted Garmin Connect body battery data into a database."""
+
+    def __init__(self, db_params, input_dir, latest, debug):
+        """
+        Return an instance of GarminBodyBatteryData.
+
+        Parameters:
+        ----------
+        db_params (object): configuration data for accessing the database
+        input_dir (string): directory (full path) to check for resting heart rate data files
+        latest (Boolean): check for latest files only
+        debug (Boolean): enable debug logging
+
+        """
+        logger.info("Processing body battery data")
+        super().__init__(r'body_battery_\d{4}-\d{2}-\d{2}\.json', input_dir=input_dir, latest=latest, debug=debug)
+        self.garmin_db = GarminDb(db_params)
+        self.conversions = {
+            'statisticsStartDate': self._parse_date,
+            'timestamp': Conversions.epoch_ms_to_dt
+        }
+
+    def _process_json(self, json_data):
+        columns_description_list = json_data['bodyBatteryValueDescriptorsDTOList']
+        timestamp_column_index = [ e["bodyBatteryValueDescriptorIndex"] for e in columns_description_list if e["bodyBatteryValueDescriptorKey"] == "timestamp" ][0]
+        body_battery_status_column_index = [ e["bodyBatteryValueDescriptorIndex"] for e in columns_description_list if e["bodyBatteryValueDescriptorKey"] == "bodyBatteryStatus" ][0]
+        body_battery_level_column_index = [ e["bodyBatteryValueDescriptorIndex"] for e in columns_description_list if e["bodyBatteryValueDescriptorKey"] == "bodyBatteryLevel" ][0]
+
+        for data_point in json_data['bodyBatteryValuesArray']:
+            point = {
+                'timestamp': datetime.datetime.fromtimestamp(data_point[timestamp_column_index]/1000),
+                'body_battery_status': data_point[body_battery_status_column_index],
+                'body_battery_level': data_point[body_battery_level_column_index],
+            }
+            BodyBattery.insert_or_update(
+                self.garmin_db, point, ignore_none=True)
+        return 1
+        
 
 class GarminProfile(JsonFileProcessor):
     """Class for importing JSON formatted Garmin Connect profile data into a database."""

@@ -45,6 +45,7 @@ class Download():
     garmin_connect_user_profile_url = "proxy/userprofile-service/userprofile"
     garmin_connect_wellness_url = "proxy/wellness-service/wellness"
     garmin_connect_sleep_daily_url = garmin_connect_wellness_url + "/dailySleepData"
+    garmin_connect_stress_daily_url = garmin_connect_wellness_url + "/dailyStress"
     garmin_connect_rhr = "proxy/userstats-service/wellness/daily"
     garmin_connect_weight_url = "proxy/weight-service/weight/dateRange"
 
@@ -324,6 +325,20 @@ class Download():
         root_logger.info("Getting sleep: %s (%d)", date, days)
         self.__get_stat(self.__get_sleep_day, directory, date, days, overwite)
 
+    def __get_body_battery_day(self, directory, date, overwite=False):
+        json_filename = f'{directory}/body_battery_{date}'
+        params = {}
+        url = f'{self.garmin_connect_stress_daily_url}/{date}'
+        try:
+            self.modern_rest_client.download_json_file(url, json_filename, overwite, params)
+        except RestException as e:
+            root_logger.error("Exception getting daily body battery: %s", e)
+
+    def get_body_battery(self, directory, date, days, overwite):
+        """Download the body battery data from Garmin Connect and save to a JSON file."""
+        root_logger.info("Getting body battery : %s (%d)", date, days)
+        self.__get_stat(self.__get_body_battery_day, directory, date, days, overwite)
+    
     def __get_rhr_day(self, directory, day, overwite=False):
         date_str = day.strftime('%Y-%m-%d')
         json_filename = f'{directory}/rhr_{date_str}'

@@ -321,6 +321,26 @@ class RestingHeartRate(GarminDb.Base, idbutils.DbObject):
             'rhr_max': cls.s_get_col_max(session, cls.resting_heart_rate, start_ts, end_ts),
         }
 
+class BodyBattery(GarminDb.Base, idbutils.DbObject):
+    """Class representing a body battery reading."""
+
+    __tablename__ = 'body_battery'
+
+    db = GarminDb
+    table_version = 1
+
+    timestamp = Column(DateTime, primary_key=True, unique=True)
+    body_battery_status = Column(String, nullable=False)
+    body_battery_level = Column(Integer, nullable=False)
+
+    @classmethod
+    def get_stats(cls, session, start_ts, end_ts):
+        """Return a dictionary of aggregate statistics for the given time period."""
+        return {
+            'body_battery_avg': cls.s_get_col_avg(session, cls.body_battery, start_ts, end_ts, ignore_le_zero=True),
+            'body_battery_min': cls.s_get_col_min(session, cls.body_battery, start_ts, end_ts, ignore_le_zero=True),
+            'body_battery_max': cls.s_get_col_max(session, cls.body_battery, start_ts, end_ts),
+        }
 
 class DailySummary(GarminDb.Base, idbutils.DbObject):
     """Class representing a Garmin daily summary."""

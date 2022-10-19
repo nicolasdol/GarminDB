@@ -22,12 +22,12 @@ class Config():
         'fitbit_file_dir'       : 'FitBitFiles',
         'mshealth_file_dir'     : 'MSHealth',
         'db_dir'                : 'DBs',
-        'backup_dir'            : 'Backups',
         'sleep_files_dir'       : 'Sleep',
         'activities_file_dir'   : 'Activities',
         'monitoring_file_dir'   : 'Monitoring',
         'weight_files_dir'      : 'Weight',
-        'rhr_files_dir'         : 'RHR'
+        'rhr_files_dir'         : 'RHR',
+        'body_battery_files_dir': 'BodyBattery'
     }
 
     config = {

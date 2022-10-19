@@ -141,9 +141,19 @@ class ConfigManager(Config):
         return cls.get_base_dir(test_dir) + os.sep + cls.directories['sleep_files_dir']
 
     @classmethod
+    def get_body_battery_dir(cls, test_dir=False):
+        """Return the configured directory of where the body battery files will be stored."""
+        return cls.get_base_dir(test_dir) + os.sep + cls.directories['body_battery_files_dir']
+    
+    @classmethod
     def get_or_create_sleep_dir(cls, test_dir=False):
         """Return the configured directory of where the sleep files will be stored creating it if needed."""
         return cls._create_dir_if_needed(cls.get_sleep_dir(test_dir))
+
+    @classmethod
+    def get_or_create_body_battery_dir(cls, test_dir=False):
+        """Return the configured directory of where the body battery files will be stored creating it if needed."""
+        return cls._create_dir_if_needed(cls.get_body_battery_dir(test_dir))
 
     @classmethod
     def get_weight_dir(cls, test_dir=False):

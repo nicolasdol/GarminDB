@@ -20,7 +20,8 @@ import zipfile
 import glob
 
 from garmindb import python_version_check, log_version, format_version
-from garmindb.garmindb import GarminDb, Attributes, Sleep, Weight, RestingHeartRate, MonitoringDb, MonitoringHeartRate, ActivitiesDb, GarminSummaryDb
+from garmindb.garmindb import GarminDb, Attributes, Sleep, Weight, RestingHeartRate, MonitoringDb, MonitoringHeartRate, ActivitiesDb, GarminSummaryDb, BodyBattery
+from garmindb.import_monitoring import GarminBodyBatteryData
 from garmindb.summarydb import SummaryDb
 
 from garmindb import Download, Copy, Analyze
@@ -103,6 +104,11 @@ def copy_data(overwite, latest, stats):
         root_logger.info("Copying sleep to %s", monitoring_dir)
         copy.copy_sleep(monitoring_dir, latest)
 
+    #if Statistics.body_battery in stats:
+    #    monitoring_dir = ConfigManager.get_or_create_monitoring_dir(datetime.datetime.now().year)
+    #    root_logger.info("Copying body battery to %s", monitoring_dir)
+    #    copy.copy_battery(monitoring_dir, latest)
+
 
 def download_data(overwite, latest, stats):
     """Download selected activity types from Garmin Connect and save the data in files. Overwrite previously downloaded data if indicated."""
@@ -155,6 +161,14 @@ def download_data(overwite, latest, stats):
             root_logger.info("Date range to update: %s (%d) to %s", date, days, rhr_dir)
             download.get_rhr(rhr_dir, date, days, overwite)
             root_logger.info("Saved rhr files for %s (%d) to %s for processing", date, days, rhr_dir)
+
+    if Statistics.body_battery in stats:
+        date, days = __get_date_and_days(GarminDb(db_params_dict), latest, BodyBattery, BodyBattery.body_battery_level, 'body_battery')
+        if days > 0:
+            body_battery_dir = ConfigManager.get_or_create_body_battery_dir()
+            root_logger.info("Date range to update: %s (%d) to %s", date, days, body_battery_dir)
+            download.get_body_battery(body_battery_dir, date, days, overwite)
+            root_logger.info("Saved body_battery files for %s (%d) to %s for processing", date, days, body_battery_dir)
 
 
 def import_data(debug, latest, stats):
@@ -210,6 +224,13 @@ def import_data(debug, latest, stats):
         grhrd = GarminRhrData(db_params_dict, rhr_dir, latest, debug)
         if grhrd.file_count() > 0:
             grhrd.process()
+
+    if Statistics.body_battery in stats:
+        body_battery_dir = ConfigManager.get_or_create_body_battery_dir()
+        gbbd = GarminBodyBatteryData(db_params_dict, body_battery_dir, latest, debug)
+        if gbbd.file_count() > 0:
+            gbbd.process()
+
 
     if Statistics.activities in stats:
         activities_dir = ConfigManager.get_or_create_activities_dir()
